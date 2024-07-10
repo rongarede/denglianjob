@@ -23,6 +23,7 @@ contract NFTMarketplace  {
         erc20Token = IERC20(_erc20Token);
     }
 
+    // 上架
     function list(uint256 tokenId, uint256 price) external {
         require(nftContract.ownerOf(tokenId) == msg.sender, "Only NFT owner can list it");
         require(!listings[tokenId].isListed, "NFT already listed");
@@ -36,6 +37,7 @@ contract NFTMarketplace  {
         emit NFTListed(tokenId, msg.sender, price);
     }
 
+    //购买
     function buyNFT(uint256 tokenId) external {
         Listing storage listing = listings[tokenId];
         require(listing.isListed, "NFT not listed");
@@ -52,6 +54,27 @@ contract NFTMarketplace  {
         delete listings[tokenId];
 
         emit NFTSold(tokenId, msg.sender, listing.price);
+    }
+
+    function onERC20Received(address sender, uint256 amount, bytes calldata data) external returns (bytes4) {
+
+        require(msg.sender == address(erc20Token), "Invalid ERC20 token");
+        (uint256 tokenId) = abi.decode(data, (uint256));
+        Listing storage listing = listings[tokenId];
+        require(listing.isListed, "NFT not listed");
+        require(amount >= listing.price, "Insufficient payment");
+
+        address seller = listing.owner;
+
+        // Transfer the NFT from seller to buyer
+        nftContract.safeTransferFrom(seller, sender, tokenId);
+
+        // Clean up the listing
+        delete listings[tokenId];
+
+        emit NFTSold(tokenId, sender, listing.price);
+
+        return this.onERC20Received.selector;
     }
 
     // 可选：撤销上架

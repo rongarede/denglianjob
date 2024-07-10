@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import "@openzeppelin/contracts/interfaces/IERC1363Receiver.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+
 interface IReceiver {
-    function tokensReceived(address from, uint256 amount) external;
+    function onERC20Received(address from, uint256 amount,bytes calldata data) external;
 }
 
 
@@ -18,7 +21,9 @@ contract BaseERC20 {
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Approval(address indexed owner, address indexed spender, uint256 value);
 
-    constructor() public {
+    error ERC1363TransferFailed(address to, uint256 value);
+
+    constructor()  {
         totalSupply = 100000000 * (10 ** uint256(decimals));
         balances[msg.sender] = totalSupply;
 
@@ -36,9 +41,6 @@ contract BaseERC20 {
         balances[_to] += _value;
         emit Transfer(msg.sender, _to, _value);
 
-        if (isContract(_to)) {
-            IReceiver(_to).tokensReceived(msg.sender, _value);
-        }
         return true;
     }
 
@@ -50,10 +52,14 @@ contract BaseERC20 {
         allowances[_from][msg.sender] -= _value;
         emit Transfer(_from, _to, _value);
 
-        if (isContract(_to)) {
-            IReceiver(_to).tokensReceived(_from, _value);
-        }
+        return true;
+    }
 
+    function transferAndCall(address _to, uint256 _value,bytes calldata data) public returns (bool success) {
+        if (!transfer(_to,_value)){
+            revert ERC1363TransferFailed(_to, _value);
+        }
+        IReceiver(_to).onERC20Received(msg.sender, _value,abi.encode(data));
         return true;
     }
 
