@@ -1,0 +1,54 @@
+type BuyNFT @entity(immutable: true) {
+  id: Bytes!
+  buyer: Bytes! # address
+  nftAddr: Bytes! # address
+  tokenId: BigInt! # uint256
+  price: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type EIP712DomainChanged @entity(immutable: true) {
+  id: Bytes!
+
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type List @entity(immutable: true) {
+  id: Bytes!
+  seller: Bytes! # address
+  nftAddr: Bytes! # address
+  tokenId: BigInt! # uint256
+  price: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type OrderBook @entity(immutable: true){
+  id: Bytes!
+  nft: Bytes! #address
+  tokenId: BigInt! #uint256
+  seller: Bytes! #address
+  payToken: Bytes! #address
+  price: BigInt! #uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+
+}
+
+type FilledOrder @entity(immutable: true){
+  id: Bytes!
+  buyer: Bytes! #address
+  fee:BigInt! # uint256
+  blockNumber: BigInt! 
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+
+  #relation
+  order: OrderBook
+}
